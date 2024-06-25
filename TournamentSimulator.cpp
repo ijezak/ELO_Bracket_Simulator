@@ -1,87 +1,138 @@
 #include "TournamentSimulator.h"
 
 int runTournament(Team* team_list[16], SixteenSystem sixteen_system, int sixteen_system_series_length, 
-    EightSystem eight_system, int eight_system_series_length, int trials, OutputType output_mode)
+    EightSystem eight_system, int eight_system_series_length, int trials, OutputMode output_mode)
 {
     Team* eight_system_team_list[8];
     for (int i = 0; i < trials; i++)
     {
+        // CLEAR TOURNAMENT VARIABLES
         for (int j = 0; j < 16; j++)
         {
-            team_list[j]->tournament_points = 0;
+            team_list[j]->most_recent_tournament_points = 0;
             team_list[j]->system_points = 0;
         }
+        // SIMULATE SIXTEEN SYSTEM
         switch(sixteen_system)
         {
-            case SINGLE_ELIM16:
+            case SYS16_SINGLE_ELIM:
                 break;
-            case DOUBLE_ELIM16:
+            case SYS16_DOUBLE_ELIM:
                 break;
-            case GROUPS16:
+            case SYS16_GROUPS:
                 break;
-            case SWISS_GAME_DIFFERENTIAL16:
+            case SYS16_SWISS_GAME_DIF:
                 runGameDifSwiss(team_list, eight_system_team_list, sixteen_system_series_length, 1, output_mode);
                 break;
-            case SWISS_BUCHHOLZ16:
+            case SYS16_SWISS_BUCHHOLZ:
                 runBuchholzSwiss(team_list, eight_system_team_list, sixteen_system_series_length, 1, output_mode);
                 break;
-            case SWISS_TRUE_RATING16:
+            case SYS16_SWISS_TRUE_RATING:
                 break;
             default:
                 break;
         }
+        // UPDATE TOURNAMENT VARIABLES
         for (int j = 0; j < 16; j++)
         {
-            team_list[j]->tournament_points += team_list[j]->system_points;
+            team_list[j]->most_recent_tournament_points += team_list[j]->system_points;
             team_list[j]->system_points = 0;
         }
-        //printTeamOrder(team_list, 16);
+        // SIMULATE EIGHT SYSTEM
         switch(eight_system)
         {
-            case NOT_APPLICABLE8:
+            case SYS8_NOT_REQ:
                 break;
-            case SINGLE_ELIM8:
+            case SYS8_SINGLE_ELIM:
                 runSingleElimFinalEight(eight_system_team_list, eight_system_series_length, 1, output_mode);
                 break;
-            case AFL_FINAL_EIGHT:
+            case SYS8_AFL_FINAL_EIGHT:
                 runAFLFinalEight(eight_system_team_list, eight_system_series_length, 1, output_mode);
                 break;
             default:
                 break;
         }
-        if (eight_system == NOT_APPLICABLE8)
+        // UPDATE TOURNAMENT VARIABLES
+        for (int j = 0; j < 8; j++)
+        {
+            eight_system_team_list[j]->most_recent_tournament_points += eight_system_team_list[j]->system_points;
+            eight_system_team_list[j]->system_points = 0;
+        }
+        // UPDATE CUMULATIVES
+        if (eight_system == SYS8_NOT_REQ)
         {
             for (int j = 0; j < 16; j++)
             {
-                team_list[j]->tournament_placement = team_list[j]->sixteen_system_placement;
+                team_list[j]->most_recent_tournament_placement = team_list[j]->sixteen_system_placement;
+                team_list[j]->cumulative_tournament_placement_count[team_list[j]->sixteen_system_placement]++;
             }
         }
         else
         {
             for (int j = 0; j < 8; j++)
             {
-                team_list[j]->tournament_placement = team_list[j]->eight_system_placement;
+                team_list[j]->most_recent_tournament_placement = team_list[j]->eight_system_placement;
+                team_list[j]->cumulative_tournament_placement_count[team_list[j]->eight_system_placement]++;
             }
             for (int j = 8; j < 16; j++)
             {
-                team_list[j]->tournament_placement = team_list[j]->sixteen_system_placement;
+                team_list[j]->most_recent_tournament_placement = team_list[j]->sixteen_system_placement;
+                team_list[j]->cumulative_tournament_placement_count[team_list[j]->sixteen_system_placement]++;
             }
         }
-        for (int j = 0; j< 8; j++)
+    }
+    // GET WEIGHTED SUMS OF CUMULATIVES
+    stableSortTeams(team_list, 16, RATING_DESC);
+    for (int i = 0; i < 16; i++)
+    {
+        for (int j = 0; j < 16; j++)
         {
-            eight_system_team_list[j]->tournament_points += eight_system_team_list[j]->system_points;
-            eight_system_team_list[j]->system_points = 0;
+            team_list[i]->cumulative_tournament_placement_weighted_sum += (j + 1)*team_list[i]->cumulative_tournament_placement_count[j];
         }
     }
+    // OUTPUT
+    if (output_mode == OUTPUT_NONE)
+    {
+        return 0;
+    }
+    outputTournamentResults(team_list, output_mode, 1, trials, sixteen_system, sixteen_system_series_length, eight_system, eight_system_series_length);
     return 0;
 }
 
-void tournamentOutputFormatted(Team* team_list[16], int trials)
+void outputTournamentResults(Team* team_list[16], OutputMode output_mode, int output_depth, int trials, 
+    SixteenSystem sixteen_system, int sixteen_system_series_length, EightSystem eight_system, int eight_system_series_length)
 {
+    std::cout << "\nTournament Simulation Complete.\n";
+    std::cout << "    Simulation Trials: " << trials << "\n";
+    std::cout << "    Final Sixteen System: " << getSixteenSystemName(sixteen_system) << "\n";
+    std::cout << "        Series Length: " << sixteen_system_series_length << "\n";
+    std::cout << "    Final Eight System: " << getEightSystemName(eight_system) << "\n";
+    std::cout << "        Series Length: " << eight_system_series_length << "\n";
+    std::cout << "\nResults:\n";
+    
+    if (output_mode == OUTPUT_FANCY)
+    {
+        std::cout << "    |  TEAM  | RATING |  TOP1  |  TOP2  |  TOP4  |  TOP8  |  TOP11  |  TOP14  |  TOP16  | AVG PLACEMENT | AVG POINTS |\n";
+        for (int i = 0; i < 16; i++)
+        {
+            std::cout << "    | " << std::setw(6) << std::fixed << std::setprecision(0) << team_list[i]->abbreviation;
+            std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(0) << team_list[i]->rating;
+            std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_tournament_placement_count[0]/(trials/100) << "%";
+            std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_tournament_placement_count[1]/(trials/100) << "%";
+            std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_tournament_placement_count[3]/(trials/100) << "%";
+            std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_tournament_placement_count[7]/(trials/100) << "%";
+            std::cout << " | " << std::setw(7) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_tournament_placement_count[10]/(trials/100) << "%";
+            std::cout << " | " << std::setw(7) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_tournament_placement_count[13]/(trials/100) << "%";
+            std::cout << " | " << std::setw(7) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_tournament_placement_count[15]/(trials/100) << "%";
+            std::cout << " | " << std::setw(13) << std::fixed << std::setprecision(1) << (double)team_list[i]->cumulative_split_points/trials;
+            std::cout << " | " << std::setw(10) << std::fixed << std::setprecision(1) << (double)team_list[i]->cumulative_tournament_placement_weighted_sum/(double)trials;
 
-}
-
-void tournamentOutputRaw(Team* team_list[16], int trials)
-{
-
+            std::cout << " |\n";
+        }
+    }
+    else if (output_mode == OUTPUT_CSV)
+    {
+        /* code */
+    }
+    
 }

@@ -9,12 +9,12 @@
 struct Team
 {
     // INNATE
-    std::string team_abbr = "";
-    std::string team_name = "";
-    float rating_mean = 0;
+    std::string abbreviation = "";
+    std::string name = "";
+    float rating = 0;
     float rating_deviation = 0;
     int initial_seed = 0;
-    int initial_league_points =0;
+    int initial_league_points = 0;
 
     // SERIES - GENERIC
     unsigned int series_game_wins = 0;
@@ -38,9 +38,12 @@ struct Team
     unsigned int system_points = 0;
 
     // TOURNAMENT - GENERIC
-    unsigned int tournament_placement = 0;
-    unsigned int tournament_placement_count[16] = {0};
-    unsigned int tournament_points = 0;
+    unsigned int most_recent_tournament_placement = 0;
+    unsigned int most_recent_tournament_points = 0;
+
+    unsigned int cumulative_tournament_placement_count[16] = {0};
+    unsigned int cumulative_tournament_placement_weighted_sum = 0;
+    unsigned int cumulative_tournament_points = 0;
 
     // SPLIT - GENERIC
     unsigned int split_placement_weighted_sum = 0;
@@ -76,7 +79,7 @@ struct Team
 };
 
 // FUNCTIONS
-void assignTeam(Team* team, std::string team_name, std::string team_abbr, int league_points, int rating_mean, int rating_deviation);
+void assignTeam(Team* team, std::string name, std::string abbreviation, int league_points, int rating, int rating_deviation);
 
 void printTeamOrder(Team* team_list[], int team_list_length);
 

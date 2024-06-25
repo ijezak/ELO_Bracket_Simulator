@@ -1,12 +1,12 @@
 #include "teams.h"
 
 // FUNCTIONS
-void assignTeam(Team* team, std::string team_name, std::string team_abbr, int initial_league_points, int rating_mean, int rating_deviation)
+void assignTeam(Team* team, std::string name, std::string abbreviation, int initial_league_points, int rating, int rating_deviation)
 {
-    team->team_name = team_name;
-    team->team_abbr = team_abbr;
+    team->name = name;
+    team->abbreviation = abbreviation;
     team->initial_league_points = initial_league_points;
-    team->rating_mean = rating_mean;
+    team->rating = rating;
     team->rating_deviation = rating_deviation;
 }
 
@@ -15,7 +15,7 @@ void printTeamOrder(Team* team_list[], int team_list_length)
     std::cout << "Team Order:\n";
     for (int i = 0; i < team_list_length; i++)
     {
-        std::cout << i + 1 << ". " << team_list[i]->team_abbr << "(" << team_list[i]->split_points << "," << team_list[i]->tournament_points << ")\n";
+        std::cout << i + 1 << ". " << team_list[i]->abbreviation << "(" << team_list[i]->split_points << "," << team_list[i]->most_recent_tournament_points << ")\n";
     }
     std::cout << "\n";
 }
@@ -25,7 +25,7 @@ void printTeamOrderSystem(Team* team_list[], int team_list_length)
     std::cout << "Team Order and system information:\n";
     for (int i = 0; i < team_list_length; i++)
     {
-        std::cout << i + 1 << ". " << team_list[i]->team_abbr << "(" << team_list[i]->system_series_dif << "," << team_list[i]->system_game_dif << ")\n";
+        std::cout << i + 1 << ". " << team_list[i]->abbreviation << "(" << team_list[i]->system_series_dif << "," << team_list[i]->system_game_dif << ")\n";
     }
     std::cout << "\n";
 }
@@ -54,7 +54,7 @@ void stableSortTeams(Team* team_list[], int team_list_length, SortType sort_type
             {
                 key = team_list[i];
                 j = i-1;
-                while (j >= 0 && team_list[j]->rating_mean < key->rating_mean)
+                while (j >= 0 && team_list[j]->rating < key->rating)
                 {
                     team_list[j+1] = team_list[j];
                     j--;
@@ -190,11 +190,11 @@ void loadRegDistTeams(Team* team_list[], int team_list_length, float top_rating,
 {
     for (int i = 0; i < team_list_length; i++)
     {
-        team_list[i]->team_name = "Team " + std::to_string(i+1);
-        team_list[i]->team_abbr = "T" + std::to_string(i+1);
+        team_list[i]->name = "Team " + std::to_string(i+1);
+        team_list[i]->abbreviation = "T" + std::to_string(i+1);
         team_list[i]->initial_seed = i;
         team_list[i]->initial_league_points = 0;
-        team_list[i]->rating_mean = top_rating - i*rating_difference;
+        team_list[i]->rating = top_rating - i*rating_difference;
         team_list[i]->rating_deviation = 200;
     }
 }

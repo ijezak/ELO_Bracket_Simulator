@@ -1,11 +1,22 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-enum OutputType
+enum OutputMode
 {
-    NO_OUTPUT,
-    RAW_OUTPUT,
-    FORMATTED_OUTPUT
+    OUTPUT_INVALID,
+    OUTPUT_NONE,
+    OUTPUT_CSV,
+    OUTPUT_FANCY
+};
+
+enum ContainerLevel
+{
+    LVL_INVALID,
+    LVL_SERIES,
+    LVL_SYSTEM,
+    LVL_TOURNAMENT,
+    LVL_SPLIT,
+    LVL_SEASON
 };
 
 enum SortType
@@ -22,25 +33,27 @@ enum SortType
 
 enum SixteenSystem
 {
-    SINGLE_ELIM16,
-    DOUBLE_ELIM16,
-    GROUPS16,
-    SWISS_GAME_DIFFERENTIAL16,
-    SWISS_BUCHHOLZ16,
-    SWISS_TRUE_RATING16
+    SYS16_INVALID,
+    SYS16_SINGLE_ELIM,
+    SYS16_DOUBLE_ELIM,
+    SYS16_GROUPS,
+    SYS16_SWISS_GAME_DIF,
+    SYS16_SWISS_BUCHHOLZ,
+    SYS16_SWISS_TRUE_RATING
 };
 
 enum EightSystem
 {
-    NOT_APPLICABLE8,
-    SINGLE_ELIM8,
-    AFL_FINAL_EIGHT
+    SYS8_INVALID,
+    SYS8_NOT_REQ,
+    SYS8_SINGLE_ELIM,
+    SYS8_AFL_FINAL_EIGHT
 };
 
 enum TiebreakerSystem
 {
-    SINGLE_ELIM_TB,
-    INIT_SEED_TB
+    TB_SINGLE_ELIM,
+    TB_INIT_SEED
 };
 
 enum QualificationParameter

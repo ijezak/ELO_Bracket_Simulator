@@ -5,7 +5,7 @@ int runSplit(Team* team_list[16], int number_of_qualifying_teams, int number_of_
     EightSystem eight_system, int eight_system_series_length, 
     TiebreakerSystem tiebreaker_system, int tiebreaker_system_series_length,
     QualificationParameter qualification_parameter,
-    int trials, OutputType output_mode)
+    int trials, OutputMode output_mode)
 {
     Team* major_qualified[4];
     for (int i = 0; i < trials; i++)
@@ -14,7 +14,7 @@ int runSplit(Team* team_list[16], int number_of_qualifying_teams, int number_of_
         for (int j = 0; j < 16; j++)
         {
             team_list[j]->split_points = 0;
-            team_list[j]->tournament_points = 0;
+            team_list[j]->most_recent_tournament_points = 0;
             team_list[j]->split_tournaments_placement_weighted_sum = 0;
         }
 
@@ -25,9 +25,9 @@ int runSplit(Team* team_list[16], int number_of_qualifying_teams, int number_of_
             runTournament(team_list, sixteen_system, sixteen_system_series_length, eight_system, eight_system_series_length, 1, output_mode);
             for (int k = 0; k < 16; k++)
             {
-                team_list[k]->split_points += team_list[k]->tournament_points;
-                team_list[k]->tournament_points = 0;
-                team_list[k]->split_tournaments_placement_weighted_sum += team_list[k]->tournament_placement;
+                team_list[k]->split_points += team_list[k]->most_recent_tournament_points;
+                team_list[k]->most_recent_tournament_points = 0;
+                team_list[k]->split_tournaments_placement_weighted_sum += team_list[k]->most_recent_tournament_placement;
             }
             switch (qualification_parameter)
             {
@@ -83,14 +83,14 @@ int runSplit(Team* team_list[16], int number_of_qualifying_teams, int number_of_
 
     switch (output_mode)
     {
-        case NO_OUTPUT:
+        case OUTPUT_NONE:
             break;
-        case RAW_OUTPUT:
+        case OUTPUT_CSV:
             stableSortTeams(team_list, 16, RATING_DESC);
             outputSplitResultsRaw(team_list, number_of_qualifying_teams, number_of_tournaments, sixteen_system, sixteen_system_series_length,
             eight_system, eight_system_series_length, tiebreaker_system, tiebreaker_system_series_length, qualification_parameter, trials, output_mode);
             break;
-        case FORMATTED_OUTPUT:
+        case OUTPUT_FANCY:
             stableSortTeams(team_list, 16, RATING_DESC);
             outputSplitResultsFormatted(team_list, number_of_qualifying_teams, number_of_tournaments, sixteen_system, sixteen_system_series_length,
             eight_system, eight_system_series_length, tiebreaker_system, tiebreaker_system_series_length, qualification_parameter, trials, output_mode);
@@ -107,50 +107,50 @@ void outputSplitResultsRaw(Team* team_list[16],  int number_of_qualifying_teams,
     EightSystem eight_system, int eight_system_series_length, 
     TiebreakerSystem tiebreaker_system, int tiebreaker_system_series_length,
     QualificationParameter qualification_parameter,
-    int trials, OutputType output_mode)
+    int trials, OutputMode output_mode)
 {
     std::string sixteen_system_name;
     std::string eight_system_name;
     std::string tiebreaker_system_name;
     switch (sixteen_system)
     {
-        case SINGLE_ELIM16:
+        case SYS16_SINGLE_ELIM:
             sixteen_system_name = "SINGLE ELIMINATION 16-to-1";
             break;
-        case DOUBLE_ELIM16:
+        case SYS16_DOUBLE_ELIM:
             sixteen_system_name = "DOUBLE ELIMINATION 16-to-1";
             break;
-        case GROUPS16:
+        case SYS16_GROUPS:
             sixteen_system_name = "FOUR-GROUP GROUPSTAGE AND ROUND 1 16-to-8";
             break;
-        case SWISS_GAME_DIFFERENTIAL16:
+        case SYS16_SWISS_GAME_DIF:
             sixteen_system_name = "SWISS WITH GAME DIFFERENTIAL TIEBREAKER 16-to-8";
             break;
-        case SWISS_BUCHHOLZ16:
+        case SYS16_SWISS_BUCHHOLZ:
             sixteen_system_name = "SWISS WITH BUCHHOLZ TIEBREAKER 16-to-8";
             break;
-        case SWISS_TRUE_RATING16:
+        case SYS16_SWISS_TRUE_RATING:
             sixteen_system_name = "SWISS WITH TRUE RATING TIEBREAKER 16-to-8";
             break;
     }
     switch (eight_system)
     {
-        case NOT_APPLICABLE8:
+        case SYS8_NOT_REQ:
             eight_system_name = "NOT APPLICABLE";
             break;
-        case SINGLE_ELIM8:
+        case SYS8_SINGLE_ELIM:
             eight_system_name = "SINGLE ELIMINATION";
             break;
-        case AFL_FINAL_EIGHT:
+        case SYS8_AFL_FINAL_EIGHT:
             eight_system_name = "AFL FINAL EIGHT SYSTEM";
             break;
     }
     switch (tiebreaker_system)
     {
-        case SINGLE_ELIM_TB:
+        case TB_SINGLE_ELIM:
             tiebreaker_system_name = "SINGLE ELIMINATION TOURNAMENT WITH BYES SEEDED BY LATEST RESULTS";
             break;
-        case INIT_SEED_TB:
+        case TB_INIT_SEED:
             tiebreaker_system_name = "INITIAL SEED";
             break;
     }
@@ -168,8 +168,8 @@ void outputSplitResultsRaw(Team* team_list[16],  int number_of_qualifying_teams,
     std::cout << "TEAM, RATING, MAJOR1 QUAL, MAJOR1 SEED1, MAJOR1 SEED2, MAJOR1 SEED3, MAJOR1 SEED4, AVG POINTS\n";
     for (int i = 0; i < 16; i++)
     {
-        std::cout << std::setw(4) << std::fixed << std::setprecision(0) << team_list[i]->team_abbr;
-        std::cout << "," << std::fixed << std::setprecision(0) << team_list[i]->rating_mean;
+        std::cout << std::setw(4) << std::fixed << std::setprecision(0) << team_list[i]->abbreviation;
+        std::cout << "," << std::fixed << std::setprecision(0) << team_list[i]->rating;
         std::cout << "," << std::fixed << std::setprecision(6) << (double)team_list[i]->major1_qualification_count/(trials);
         std::cout << "," << std::fixed << std::setprecision(6) << (double)team_list[i]->cumulative_split_placement_count[0]/(trials);
         std::cout << "," << std::fixed << std::setprecision(6) << (double)team_list[i]->cumulative_split_placement_count[1]/(trials);
@@ -185,50 +185,50 @@ void outputSplitResultsFormatted(Team* team_list[16],  int number_of_qualifying_
     EightSystem eight_system, int eight_system_series_length, 
     TiebreakerSystem tiebreaker_system, int tiebreaker_system_series_length,
     QualificationParameter qualification_parameter,
-    int trials, OutputType output_mode)
+    int trials, OutputMode output_mode)
 {
     std::string sixteen_system_name;
     std::string eight_system_name;
     std::string tiebreaker_system_name;
     switch (sixteen_system)
     {
-        case SINGLE_ELIM16:
+        case SYS16_SINGLE_ELIM:
             sixteen_system_name = "SINGLE ELIMINATION 16-to-1";
             break;
-        case DOUBLE_ELIM16:
+        case SYS16_DOUBLE_ELIM:
             sixteen_system_name = "DOUBLE ELIMINATION 16-to-1";
             break;
-        case GROUPS16:
+        case SYS16_GROUPS:
             sixteen_system_name = "FOUR-GROUP GROUPSTAGE AND ROUND 1 16-to-8";
             break;
-        case SWISS_GAME_DIFFERENTIAL16:
+        case SYS16_SWISS_GAME_DIF:
             sixteen_system_name = "SWISS WITH GAME DIFFERENTIAL TIEBREAKER 16-to-8";
             break;
-        case SWISS_BUCHHOLZ16:
+        case SYS16_SWISS_BUCHHOLZ:
             sixteen_system_name = "SWISS WITH BUCHHOLZ TIEBREAKER 16-to-8";
             break;
-        case SWISS_TRUE_RATING16:
+        case SYS16_SWISS_TRUE_RATING:
             sixteen_system_name = "SWISS WITH TRUE RATING TIEBREAKER 16-to-8";
             break;
     }
     switch (eight_system)
     {
-        case NOT_APPLICABLE8:
+        case SYS8_NOT_REQ:
             eight_system_name = "NOT APPLICABLE";
             break;
-        case SINGLE_ELIM8:
+        case SYS8_SINGLE_ELIM:
             eight_system_name = "SINGLE ELIMINATION";
             break;
-        case AFL_FINAL_EIGHT:
+        case SYS8_AFL_FINAL_EIGHT:
             eight_system_name = "AFL FINAL EIGHT SYSTEM";
             break;
     }
     switch (tiebreaker_system)
     {
-        case SINGLE_ELIM_TB:
+        case TB_SINGLE_ELIM:
             tiebreaker_system_name = "SINGLE ELIMINATION TOURNAMENT WITH BYES SEEDED BY LATEST RESULTS";
             break;
-        case INIT_SEED_TB:
+        case TB_INIT_SEED:
             tiebreaker_system_name = "INITIAL SEED";
             break;
     }
@@ -251,8 +251,8 @@ void outputSplitResultsFormatted(Team* team_list[16],  int number_of_qualifying_
     std::cout << "    | TEAM | RATING | QUALIFIED |   1st   |   2nd   |   3rd   |   4th   |   5th   |   6th   | POINTS | PLACEMENT |\n";
     for (int i = 0; i < 16; i++)
     {
-        std::cout << "    | " << std::setw(4) << std::fixed << std::setprecision(0) << team_list[i]->team_abbr;
-        std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(0) << team_list[i]->rating_mean;
+        std::cout << "    | " << std::setw(4) << std::fixed << std::setprecision(0) << team_list[i]->abbreviation;
+        std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(0) << team_list[i]->rating;
         std::cout << " | " << std::setw(8) << std::fixed << std::setprecision(3) << (double)team_list[i]->major1_qualification_count/(trials/100) << "%";
         std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_split_placement_count[0]/(trials/100) << "%";
         std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_split_placement_count[1]/(trials/100) << "%";

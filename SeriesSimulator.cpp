@@ -16,8 +16,8 @@ bool runSeriesSimulation(Team* team_upper, Team* team_lower, int series_length)
     team_lower->series_game_losses = 0;
     team_lower->series_game_dif = 0;
 
-    std::normal_distribution<float> distribution1(team_upper->rating_mean, team_upper->rating_deviation);
-    std::normal_distribution<float> distribution2(team_lower->rating_mean, team_lower->rating_deviation);
+    std::normal_distribution<float> distribution1(team_upper->rating, team_upper->rating_deviation);
+    std::normal_distribution<float> distribution2(team_lower->rating, team_lower->rating_deviation);
 
     bool series_complete = false;
     while (!series_complete)

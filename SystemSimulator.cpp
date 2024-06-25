@@ -1,6 +1,6 @@
 #include "SystemSimulator.h"
 
-int runSingleElimFinalEight(Team* team_list[8], int series_length, int trials, OutputType output_mode)
+int runSingleElimFinalEight(Team* team_list[8], int series_length, int trials, OutputMode output_mode)
 {
     for (int j = 0; j < 8; j++)
     {
@@ -69,7 +69,7 @@ int runSingleElimFinalEight(Team* team_list[8], int series_length, int trials, O
     return 0;
 }
 
-int runAFLFinalEight(Team* team_list[8], int series_length, int trials, OutputType output_mode)
+int runAFLFinalEight(Team* team_list[8], int series_length, int trials, OutputMode output_mode)
 {
     for (int j = 0; j < 8; j++)
     {
@@ -215,7 +215,7 @@ int runAFLFinalEight(Team* team_list[8], int series_length, int trials, OutputTy
     return 0;
 }
 
-int runGameDifSwiss(Team* team_list[16], Team* qualified[8], int series_length, int trials, OutputType output_mode)
+int runGameDifSwiss(Team* team_list[16], Team* qualified[8], int series_length, int trials, OutputMode output_mode)
 {
     // CLEAR SYSTEM VARIABLES
     for (int i = 0; i < 16; i++)
@@ -327,7 +327,7 @@ int runGameDifSwiss(Team* team_list[16], Team* qualified[8], int series_length, 
     return 0;
 }
 
-int runBuchholzSwiss(Team* team_list[16], Team* qualified[8], int series_length, int trials, OutputType output_mode)
+int runBuchholzSwiss(Team* team_list[16], Team* qualified[8], int series_length, int trials, OutputMode output_mode)
 {
     // CLEAR SYSTEM VARIABLES
     for (int i = 0; i < 16; i++)
@@ -448,8 +448,7 @@ int runBuchholzSeries(Team* upper, Team* lower, int series_length)
     return 0;
 }
 
-int runTiebreaker(Team* team_list[16], QualificationParameter qualification_parameter, int series_length, 
-    int number_of_teams_to_qualify, int trials, int output_mode)
+int runTiebreaker(Team* team_list[16], QualificationParameter qualification_parameter, int series_length, int number_of_teams_to_qualify, int trials, int output_mode)
 {
     int tied_teams_count = 0;
     int tied_teams_to_qualify = 0;
@@ -507,8 +506,8 @@ int runTiebreaker(Team* team_list[16], QualificationParameter qualification_para
     for (int i = tied_teams_count; i < 16; i++)
     {
         tiebreaker_playoff[i] = new Team;
-        tiebreaker_playoff[i]->team_abbr = "BYE";
-        tiebreaker_playoff[i]->rating_mean = -9999;
+        tiebreaker_playoff[i]->abbreviation = "BYE";
+        tiebreaker_playoff[i]->rating = -9999;
         tiebreaker_playoff[i]->rating_deviation = 0;
     }
     // SIMULATE BRACKET WITH SPECIFIC SEED-BASED PLACEMENT RESULTS
@@ -574,4 +573,53 @@ int runTiebreaker(Team* team_list[16], QualificationParameter qualification_para
     }
     
     return tied_teams_count;
+}
+
+std::string getEightSystemName(EightSystem sys)
+{
+    switch (sys)
+    {
+        case SYS8_NOT_REQ:
+            return "NOT REQUIRED";
+        case SYS8_SINGLE_ELIM:
+            return "SINGLE ELIMINATION";
+        case SYS8_AFL_FINAL_EIGHT:
+            return "AFL FINAL EIGHT SYSTEM";
+        default:
+            return "INVALID EIGHT SYSTEM";
+    }
+}
+
+std::string getSixteenSystemName(SixteenSystem sys)
+{
+    switch (sys)
+    {
+        case SYS16_SINGLE_ELIM:
+            return "SINGLE ELIMINATION 16-to-1";
+        case SYS16_DOUBLE_ELIM:
+            return "DOUBLE ELIMINATION 16-to-1";
+        case SYS16_GROUPS:
+            return "FOUR-GROUP GROUPSTAGE AND ROUND 1 16-to-8";
+        case SYS16_SWISS_GAME_DIF:
+            return "SWISS WITH GAME DIFFERENTIAL TIEBREAKER 16-to-8";
+        case SYS16_SWISS_BUCHHOLZ:
+            return "SWISS WITH BUCHHOLZ TIEBREAKER 16-to-8";
+        case SYS16_SWISS_TRUE_RATING:
+            return "SWISS WITH TRUE RATING TIEBREAKER 16-to-8";
+        default:
+            return "INVALID SIXTEEN SYSTEM";
+    }
+}
+
+std::string getTiebreakerSystemName(TiebreakerSystem sys)
+{
+    switch (sys)
+    {
+        case TB_SINGLE_ELIM:
+            return "SINGLE ELIMINATION TOURNAMENT WITH BYES SEEDED BY LATEST RESULTS";
+        case TB_INIT_SEED:
+            return "INITIAL SEED";
+        default:
+            return "INVALID TIEBREAKER SYSTEM";
+    }
 }
