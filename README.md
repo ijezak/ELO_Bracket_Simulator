@@ -23,6 +23,14 @@ to quantify the performance of different formats when modelling team perfomance 
 swiss into single elimination when round 1 seeding is ideal, but loses badly to swiss into single elimination when round 1 seeding is poor. This program can therefore be used to 
 determine the strengths and weaknesses of different formats to allow tournament designers to be more informed and design more effective tournaments.
 
+Future plans
+
+- finish user interface to allow all existing funcitonality to be utilized
+- support more formats and format combinations
+- parallelization
+- improve GLICKO support
+- allow ELO calculation from list of results with various formulas
+
 How to compile:
 
 g++ main.cpp LeagueSimulator.cpp SplitSimulator.cpp TournamentSimulator.cpp SystemSimulator.cpp SeriesSimulator.cpp teams.cpp -o ELO_Bracket_Simulator
