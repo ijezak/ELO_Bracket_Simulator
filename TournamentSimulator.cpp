@@ -65,6 +65,7 @@ int runTournament(Team* team_list[16], SixteenSystem sixteen_system, int sixteen
             {
                 team_list[j]->most_recent_tournament_placement = team_list[j]->sixteen_system_placement;
                 team_list[j]->cumulative_tournament_placement_count[team_list[j]->sixteen_system_placement]++;
+                team_list[j]->cumulative_tournament_points += team_list[j]->most_recent_tournament_points;
             }
         }
         else
@@ -73,11 +74,13 @@ int runTournament(Team* team_list[16], SixteenSystem sixteen_system, int sixteen
             {
                 team_list[j]->most_recent_tournament_placement = team_list[j]->eight_system_placement;
                 team_list[j]->cumulative_tournament_placement_count[team_list[j]->eight_system_placement]++;
+                team_list[j]->cumulative_tournament_points += team_list[j]->most_recent_tournament_points;
             }
             for (int j = 8; j < 16; j++)
             {
                 team_list[j]->most_recent_tournament_placement = team_list[j]->sixteen_system_placement;
                 team_list[j]->cumulative_tournament_placement_count[team_list[j]->sixteen_system_placement]++;
+                team_list[j]->cumulative_tournament_points += team_list[j]->most_recent_tournament_points;
             }
         }
     }
@@ -85,6 +88,7 @@ int runTournament(Team* team_list[16], SixteenSystem sixteen_system, int sixteen
     stableSortTeams(team_list, 16, RATING_DESC);
     for (int i = 0; i < 16; i++)
     {
+        team_list[i]->cumulative_tournament_placement_weighted_sum = 0;
         for (int j = 0; j < 16; j++)
         {
             team_list[i]->cumulative_tournament_placement_weighted_sum += (j + 1)*team_list[i]->cumulative_tournament_placement_count[j];
@@ -109,30 +113,43 @@ void outputTournamentResults(Team* team_list[16], OutputMode output_mode, int ou
     std::cout << "    Final Eight System: " << getEightSystemName(eight_system) << "\n";
     std::cout << "        Series Length: " << eight_system_series_length << "\n";
     std::cout << "\nResults:\n";
-    
+
     if (output_mode == OUTPUT_FANCY)
     {
-        std::cout << "    |  TEAM  | RATING |  TOP1  |  TOP2  |  TOP4  |  TOP8  |  TOP11  |  TOP14  |  TOP16  | AVG PLACEMENT | AVG POINTS |\n";
+        std::cout << "    |  TEAM  | RATING |  TOP1  |  TOP2  |  TOP4  |  TOP8  |  TOP11  |  TOP14  |  TOP16  | AVG POS | AVG PTS |\n";
         for (int i = 0; i < 16; i++)
         {
             std::cout << "    | " << std::setw(6) << std::fixed << std::setprecision(0) << team_list[i]->abbreviation;
             std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(0) << team_list[i]->rating;
-            std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_tournament_placement_count[0]/(trials/100) << "%";
-            std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_tournament_placement_count[1]/(trials/100) << "%";
-            std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_tournament_placement_count[3]/(trials/100) << "%";
-            std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_tournament_placement_count[7]/(trials/100) << "%";
-            std::cout << " | " << std::setw(7) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_tournament_placement_count[10]/(trials/100) << "%";
-            std::cout << " | " << std::setw(7) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_tournament_placement_count[13]/(trials/100) << "%";
-            std::cout << " | " << std::setw(7) << std::fixed << std::setprecision(3) << (double)team_list[i]->cumulative_tournament_placement_count[15]/(trials/100) << "%";
-            std::cout << " | " << std::setw(13) << std::fixed << std::setprecision(1) << (double)team_list[i]->cumulative_split_points/trials;
-            std::cout << " | " << std::setw(10) << std::fixed << std::setprecision(1) << (double)team_list[i]->cumulative_tournament_placement_weighted_sum/(double)trials;
-
+            std::cout << " | " << std::setw(5) << std::fixed << std::setprecision(2) << (double)team_list[i]->cumulative_tournament_placement_count[0]/((double)trials/100) << "%";
+            std::cout << " | " << std::setw(5) << std::fixed << std::setprecision(2) << (double)team_list[i]->cumulative_tournament_placement_count[1]/((double)trials/100) << "%";
+            std::cout << " | " << std::setw(5) << std::fixed << std::setprecision(2) << (double)team_list[i]->cumulative_tournament_placement_count[3]/((double)trials/100) << "%";
+            std::cout << " | " << std::setw(5) << std::fixed << std::setprecision(2) << (double)team_list[i]->cumulative_tournament_placement_count[7]/((double)trials/100) << "%";
+            std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(2) << (double)team_list[i]->cumulative_tournament_placement_count[10]/((double)trials/100) << "%";
+            std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(2) << (double)team_list[i]->cumulative_tournament_placement_count[13]/((double)trials/100) << "%";
+            std::cout << " | " << std::setw(6) << std::fixed << std::setprecision(2) << (double)team_list[i]->cumulative_tournament_placement_count[15]/((double)trials/100) << "%";
+            std::cout << " | " << std::setw(7) << std::fixed << std::setprecision(1) << (double)team_list[i]->cumulative_tournament_placement_weighted_sum/(double)trials;
+            std::cout << " | " << std::setw(7) << std::fixed << std::setprecision(1) << (double)team_list[i]->cumulative_tournament_points/(double)trials;
             std::cout << " |\n";
         }
     }
     else if (output_mode == OUTPUT_CSV)
     {
-        /* code */
+        std::cout << "TEAM,RATING,TOP1,TOP2,TOP4,TOP8,TOP11,TOP14,TOP16,AVG POS,AVG PTS\n";
+        for (int i = 0; i < 16; i++)
+        {
+            std::cout << std::setw(6) << std::fixed << std::setprecision(0) << team_list[i]->abbreviation;
+            std::cout << "," << std::fixed << std::setprecision(0) << team_list[i]->rating;
+            std::cout << "," << std::fixed << std::setprecision(2) << (double)team_list[i]->cumulative_tournament_placement_count[0]/((double)trials/100) << "%";
+            std::cout << "," << std::fixed << std::setprecision(2) << (double)team_list[i]->cumulative_tournament_placement_count[1]/((double)trials/100) << "%";
+            std::cout << "," << std::fixed << std::setprecision(2) << (double)team_list[i]->cumulative_tournament_placement_count[3]/((double)trials/100) << "%";
+            std::cout << "," << std::fixed << std::setprecision(2) << (double)team_list[i]->cumulative_tournament_placement_count[7]/((double)trials/100) << "%";
+            std::cout << "," << std::fixed << std::setprecision(2) << (double)team_list[i]->cumulative_tournament_placement_count[10]/((double)trials/100) << "%";
+            std::cout << "," << std::fixed << std::setprecision(2) << (double)team_list[i]->cumulative_tournament_placement_count[13]/((double)trials/100) << "%";
+            std::cout << "," << std::fixed << std::setprecision(2) << (double)team_list[i]->cumulative_tournament_placement_count[15]/((double)trials/100) << "%";
+            std::cout << "," << std::fixed << std::setprecision(1) << (double)team_list[i]->cumulative_tournament_placement_weighted_sum/(double)trials;
+            std::cout << "," << std::fixed << std::setprecision(1) << (double)team_list[i]->cumulative_tournament_points/(double)trials;
+            std::cout << "\n";
+        }
     }
-    
 }

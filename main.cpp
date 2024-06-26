@@ -129,7 +129,7 @@ void printUsageGuide()
     std::cout << "-i [FILE]   : input file name (see: team_list_example.csv)" << std::endl;
     std::cout << "-o [FILE]   : output file name" << std::endl;
     std::cout << "-d [NUM]    : output depth (0 for results of outermost container only, +1 for results of each additional depth level; e.g. tournaments contain systems which contain series)" << std::endl;
-    std::cout << "-f [TEXT]   : output format ('CSV' for comma-separated table, 'FANCY' for fancy formatting)" << std::endl;
+    std::cout << "-f [TEXT]   : output format ('CSV' for comma-separated values, 'FANCY' for fancy table formatting)" << std::endl;
     std::cout << "-t [NUM]    : number of simulation trials" << std::endl;
     std::cout << "-s [TEXT]   : simulation level (options: SPLIT, TOURNAMENT, SYSTEM)" << std::endl;
     std::cout << "-a [TEXT]   : final eight system (options: SINGLE_ELIM, AFL_FINAL_EIGHT)" << std::endl;
@@ -277,13 +277,16 @@ int main(int argc, char *argv[])
     }
 
     // RUN SIMULATIONS
-    //runTournament(teams, )
+    auto start = std::chrono::high_resolution_clock::now();
 
+    if (container_level == LVL_TOURNAMENT)
+    {
+        runTournament(teams, sixteen_system, sixteen_system_series_length, eight_system, eight_system_series_length, trials, output_mode);
+    }
 
-    /*auto start = std::chrono::high_resolution_clock::now();
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-    std::cout << "Execution time: " << duration_ms.count() << "\n";*/
+    std::cout << "Execution time: " << duration_ms.count() << " ms\n";
 
     return 0;
 }

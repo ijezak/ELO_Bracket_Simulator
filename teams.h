@@ -76,6 +76,35 @@ struct Team
     unsigned int rr_head_to_head[16] = {0};
     unsigned int rr_final_record[16] = {0};
     unsigned int rr_final_placement[16] = {0};
+
+    // REFACTOR:
+
+    /*
+    unsigned int sys8_placement = 0;
+    unsigned int sys8_points = 0;
+    unsigned int sys8_cum_placements[8] = {0};
+    unsigned int sys8_cum_points = 0;
+
+    unsigned int sys16_placement = 0;
+    unsigned int sys16_points = 0;
+    unsigned int sys16_cum_placements[8] = {0};
+    unsigned int sys16_cum_points = 0;
+
+    unsigned int tournament_placement = 0;
+    unsigned int tournament_points = 0;
+    unsigned int tournament_cum_placements[16] = {0};
+    unsigned int tournament_cum_points = 0;
+
+    unsigned int split_placement = 0;
+    unsigned int split_points = 0;
+    unsigned int split_cum_placements[16] = {0};
+    unsigned int split_cum_points = 0;
+
+    unsigned int season_placement = 0;
+    unsigned int season_points = 0;
+    unsigned int season_placements[16] = {0};
+    */
+
 };
 
 // FUNCTIONS
