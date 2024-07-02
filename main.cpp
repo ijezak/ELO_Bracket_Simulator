@@ -7,6 +7,7 @@
 #include <cstring>
 #include <string>
 #include <fstream>
+#include <omp.h>
 
 SixteenSystem getSixteenSystem(const std::string& sys)
 {
@@ -136,6 +137,7 @@ void printUsageGuide()
     std::cout << "-A [NUM]    : final eight system series length (best of NUM) - must be positive odd number" << std::endl;
     std::cout << "-b [TEXT]   : final sixteen system (options: ROUND_ROBIN, SINGLE_ELIM, DOUBLE_ELIM, GROUPS, SWISS_GAME_DIF, SWISS_BUCH, SWISS_TRUE)" << std::endl;
     std::cout << "-B [NUM]    : final sixteen system series length (best of NUM) - must be positive odd number" << std::endl;
+    std::cout << "-T [NUM]    : number of threads for parallel execution" << std::endl;
     std::cout << std::endl;
 }
 
@@ -145,6 +147,7 @@ int main(int argc, char *argv[])
     Team* teams[num_teams] = {nullptr};
 
     int opt;
+    int user_num_threads = 1;
     int trials = 0;
     int output_depth = 0;
     OutputMode output_mode = OUTPUT_INVALID;
@@ -164,7 +167,7 @@ int main(int argc, char *argv[])
     }
 
     // GET OPTIONS
-    while ((opt = getopt(argc, argv, "i:o:d:f:t:s:a:A:b:B:")) != -1) 
+    while ((opt = getopt(argc, argv, "i:o:d:f:t:s:a:A:b:B:T:")) != -1) 
     {
         switch (opt) {
             case 'i':
@@ -207,6 +210,9 @@ int main(int argc, char *argv[])
                 sixteen_system_series_length = atoi(optarg);
                 break;
             }
+            case 'T':
+                user_num_threads = atoi(optarg);
+                break;
             default:
                 printUsageGuide();
                 return 1;
@@ -267,6 +273,12 @@ int main(int argc, char *argv[])
             std::cerr << "For help, run with no options" << std::endl;
             return 1;
         }
+        if (user_num_threads < 1)
+        {
+            std::cerr << "Error: number of threads must be positive number" << std::endl;
+            std::cerr << "For help, run with no options" << std::endl;
+            return 1;
+        }
     }
 
     // GET TEAMS FROM INPUT FILE
@@ -281,7 +293,79 @@ int main(int argc, char *argv[])
 
     if (container_level == LVL_TOURNAMENT)
     {
-        runTournament(teams, sixteen_system, sixteen_system_series_length, eight_system, eight_system_series_length, trials, output_mode);
+        if (user_num_threads == 1)
+        {
+            runTournament(teams, sixteen_system, sixteen_system_series_length, eight_system, eight_system_series_length, trials, output_mode);
+        }
+        else
+        {
+            std::cout << "Running in parallel with " << user_num_threads << " threads." << std::endl;
+            #pragma omp parallel num_threads(user_num_threads)
+            {
+                // CREATE LOCAL COPIES
+                Team* teams_local[num_teams];
+                
+                // COPY DATA
+                #pragma omp critical
+                {
+                    for (int i = 0; i < num_teams; i++)
+                    {
+                        teams_local[i] = new Team;
+                        teams_local[i]->abbreviation = teams[i]->abbreviation;
+                        teams_local[i]->rating = teams[i]->rating;
+                        teams_local[i]->rating_deviation = teams[i]->rating_deviation;
+                        teams_local[i]->initial_seed = teams[i]->initial_seed;
+                        teams_local[i]->initial_league_points = teams[i]->initial_league_points;
+                    }
+                }
+                
+                // EXECUTE TRIALS IN PARALLEL
+                for (int i = 0; i < trials/user_num_threads; i++)
+                {
+                    runTournament(teams_local, sixteen_system, sixteen_system_series_length, eight_system, eight_system_series_length, 1, OUTPUT_NONE);
+                }
+                
+                // SORT LOCALS
+                stableSortTeams(teams_local, num_teams, RATING_DESC);
+
+                // SORT GLOBAL
+                #pragma omp single
+                {
+                    stableSortTeams(teams, num_teams, RATING_DESC);
+                }
+                
+                // SUM LOCAL COPIES
+                #pragma omp critical
+                {
+                    for (int i = 0; i < 16; i++)
+                    {
+                        teams[i]->cumulative_tournament_placement_weighted_sum += teams_local[i]->cumulative_tournament_placement_weighted_sum;
+                        teams[i]->cumulative_tournament_points += teams_local[i]->cumulative_tournament_points;
+                        teams[i]->cumulative_split_placement_weighted_sum += teams_local[i]->cumulative_split_placement_weighted_sum;
+                        teams[i]->cumulative_split_points += teams_local[i]->cumulative_split_points;
+                        for (int j = 0; j < 8; j++)
+                        {
+                            teams[i]->eight_system_placement_count[j] += teams_local[i]->eight_system_placement_count[j];
+                        }
+                        for (int j = 0; j < 16; j++)
+                        {   
+                            teams[i]->sixteen_system_placement_count[j] += teams_local[i]->sixteen_system_placement_count[j];
+                            teams[i]->cumulative_tournament_placement_count[j] += teams_local[i]->cumulative_tournament_placement_count[j];
+                            teams[i]->cumulative_split_placement_count[j] += teams_local[i]->cumulative_split_placement_count[j]; 
+                        }
+                    }
+                    //std::cout << std::endl << "OUTPUT FROM THREAD " << omp_get_thread_num() << std::endl;
+                    //outputTournamentResults(teams_local, output_mode, output_depth, trials/user_num_threads, sixteen_system, sixteen_system_series_length, eight_system, eight_system_series_length);
+                }
+
+                // DELETE LOCAL COPIES
+                for (int i = 0; i < num_teams; i++)
+                {
+                    delete teams_local[i];
+                } 
+            }
+            outputTournamentResults(teams, output_mode, output_depth, trials, sixteen_system, sixteen_system_series_length, eight_system, eight_system_series_length);
+        }
     }
 
     auto stop = std::chrono::high_resolution_clock::now();
